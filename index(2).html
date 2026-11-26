@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SILVA OUTLET | Moda e estilo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a44c;--bg:#090909;--panel:#151515;--line:#393329;--muted:#aaa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f5f1e8;font:16px Arial,sans-serif}
+header{padding:17px 5%;border-bottom:1px solid #30291d;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#090909}
+.brand{font:bold 24px Georgia,serif;color:var(--gold);letter-spacing:3px;text-decoration:none}
+nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap}a{color:inherit;text-decoration:none}
+button,.btn{padding:11px 15px;background:var(--gold);color:#111;border:1px solid var(--gold);border-radius:3px;font-weight:bold;cursor:pointer}
+.secondary{background:transparent;color:var(--gold)}button:disabled{opacity:.55;cursor:wait}
+.hero{text-align:center;padding:65px 15px;background:linear-gradient(110deg,#080808,#211b10);border-bottom:1px solid #40331b}
+.hero p{color:#aaa;letter-spacing:2px;text-transform:uppercase;font-size:12px}.hero h1{font:clamp(34px,7vw,58px) Georgia,serif;color:var(--gold);margin:15px 0}
+main{max-width:1150px;margin:auto;padding:30px 5%}h2{font:27px Georgia,serif;color:var(--gold);font-weight:normal}
+.tools{display:flex;gap:10px;margin:18px 0;flex-wrap:wrap}input,select,textarea{background:#151515;color:white;border:1px solid #49433a;padding:12px;border-radius:3px;max-width:100%;width:100%}.tools input{flex:1;min-width:180px}.tools select{width:auto;min-width:160px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}.product{background:var(--panel);border:1px solid #333;border-radius:3px;overflow:hidden}.product img,.placeholder{width:100%;aspect-ratio:4/5;object-fit:cover;display:block}.placeholder{display:grid;place-items:center;color:#888;background:#202020}.info{padding:12px}.price{color:var(--gold);font-size:19px;font-weight:bold}.meta{color:var(--muted);font-size:12px;line-height:1.5}.empty{color:#aaa;padding:20px;border:1px dashed #444}
+footer{text-align:center;color:#888;padding:35px;border-top:1px solid #333;margin-top:35px}
+dialog{background:#151515;color:white;border:1px solid var(--gold);width:min(520px,94vw);max-height:90vh;overflow:auto;padding:22px}dialog::backdrop{background:#000b}dialog input,dialog select,dialog textarea{margin:6px 0 13px}label{display:block;font-size:14px;color:#ddd}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.row button{flex:1}.hidden{display:none!important}.hint{font-size:12px;color:#aaa;margin:-6px 0 12px}.admin-list{display:grid;gap:9px;margin-top:18px}.admin-item{display:flex;align-items:center;gap:12px;border:1px solid #38332a;padding:9px}.admin-item img{width:55px;height:65px;object-fit:cover}.admin-item .grow{flex:1}.admin-item button{padding:8px}
+@media(max-width:550px){header{align-items:flex-start;flex-direction:column}nav{width:100%}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:48px 12px}.admin-item{align-items:flex-start}.admin-item .row{flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+<a class="brand" href="#">SILVA OUTLET</a>
+<nav><a href="#catalogo">Catálogo</a><button class="secondary" id="loginBtn">Entrar</button><button id="adminBtn" class="hidden">Painel</button></nav>
+</header>
+<section class="hero"><p>Moda masculina e feminina</p><h1>Vista sua personalidade.</h1><a href="#catalogo"><button>Explorar coleção</button></a></section>
+<main id="catalogo">
+<h2>Catálogo</h2>
+<div class="tools"><input id="search" placeholder="Buscar produto..."><select id="category"><option value="">Todas as categorias</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="unissex">Unissex</option><option value="acessorios">Acessórios</option></select></div>
+<div id="products" class="grid"><div class="empty">Carregando catálogo...</div></div><p id="status" class="meta"></p>
+</main>
+<footer>© <span id="year"></span> SILVA OUTLET. Todos os direitos reservados.</footer>
+
+<dialog id="loginDialog">
+<h2>Entrar na SILVA OUTLET</h2><label>E-mail</label><input id="email" type="email" autocomplete="username" placeholder="seu@email.com">
+<label>Senha</label><input id="password" type="password" autocomplete="current-password" placeholder="Sua senha">
+<div class="row"><button id="signIn">Entrar</button><button class="secondary" id="closeLogin">Fechar</button></div><p id="loginMessage" class="meta"></p>
+</dialog>
+
+<dialog id="adminDialog">
+<h2>Painel administrativo</h2>
+<p class="meta">Cadastre produtos e suas variações. As fotos são enviadas diretamente do celular para o Storage.</p>
+<label>Nome do produto</label><input id="pname" placeholder="Ex.: Camiseta básica">
+<label>Descrição</label><textarea id="pdesc" rows="2" placeholder="Detalhes do produto"></textarea>
+<label>Preço (R$)</label><input id="pprice" type="number" min="0" step="0.01" placeholder="70,00">
+<label>Categoria</label><select id="pgender"><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="unissex">Unissex</option><option value="acessorios">Acessórios</option></select>
+<label>Cores (separe por vírgula)</label><input id="pcolors" placeholder="Preto, Branco">
+<label>Tamanhos (separe por vírgula)</label><input id="psizes" placeholder="P, M, G, GG">
+<p class="hint">Para acessórios, use Único no campo de tamanhos.</p>
+<label>Estoque inicial por combinação de cor e tamanho</label><input id="pstock" type="number" min="0" step="1" value="0">
+<label>Foto do produto</label><input id="pimage" type="file" accept="image/*">
+<p class="hint">Escolha a foto original na galeria do celular. Recomendado: JPG, PNG ou WebP, até 8 MB.</p>
+<div class="row"><button id="saveProduct">Cadastrar produto</button><button class="secondary" id="closeAdmin">Fechar</button></div>
+<p id="adminMessage" class="meta"></p>
+<hr style="border-color:#393329;margin:22px 0">
+<h2 style="font-size:22px">Produtos cadastrados</h2><div id="adminProducts" class="admin-list"></div>
+</dialog>
+
+<script>
+const SUPABASE_URL='https://lqsqrjovqascdccutsxc.supabase.co';
+const SUPABASE_KEY='sb_publishable_TDscfXmWIWqz60P9-iA_vw_UcZgMmvE';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);let products=[],isAdmin=false;
+$('year').textContent=new Date().getFullYear();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const splitList=s=>[...new Set(s.split(',').map(x=>x.trim()).filter(Boolean))];
+
+function render(){
+ const term=$('search').value.trim().toLowerCase(),cat=$('category').value;
+ const arr=products.filter(p=>(!cat||p.gender===cat)&&(!term||p.name.toLowerCase().includes(term)));
+ $('products').innerHTML=arr.length?arr.map(p=>{
+  const variants=p.product_variants||[];
+  const sizes=[...new Set(variants.map(v=>v.size))],colors=[...new Set(variants.map(v=>v.color))];
+  return `<article class="product">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:'<div class="placeholder">SILVA OUTLET</div>'}<div class="info"><b>${esc(p.name)}</b><p class="price">${money(p.price)}</p><p class="meta">${esc(p.gender)}${colors.length?' · '+colors.map(esc).join(', '):''}${sizes.length?' · '+sizes.map(esc).join(', '):''}</p>${p.description?`<p class="meta">${esc(p.description)}</p>`:''}</div></article>`;
+ }).join(''):'<div class="empty">Nenhum produto cadastrado ainda.</div>';
+ $('status').textContent=`${arr.length} produto(s) no catálogo.`;
+}
+async function loadProducts(){
+ $('products').innerHTML='<div class="empty">Carregando catálogo...</div>';
+ const {data,error}=await db.from('products').select('id,name,description,price,image_url,gender,product_variants(size,color,stock)').eq('active',true).order('created_at',{ascending:false});
+ if(error){$('products').innerHTML='<div class="empty">Não foi possível carregar o catálogo.</div>';$('status').textContent=error.message;return;}
+ products=data||[];render();
+}
+async function checkUser(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user){isAdmin=false;$('adminBtn').classList.add('hidden');$('loginBtn').textContent='Entrar';return;}
+ const {data,error}=await db.from('profiles').select('role').eq('id',user.id).maybeSingle();
+ isAdmin=!error&&data?.role==='admin';
+ $('adminBtn').classList.toggle('hidden',!isAdmin);$('loginBtn').textContent='Sair';
+}
+async function loadAdminProducts(){
+ const {data,error}=await db.from('products').select('id,name,price,image_url,active').order('created_at',{ascending:false});
+ if(error){$('adminProducts').textContent=error.message;return;}
+ $('adminProducts').innerHTML=(data||[]).map(p=>`<div class="admin-item">${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:'<div class="placeholder" style="width:55px;height:65px">Foto</div>'}<div class="grow"><b>${esc(p.name)}</b><div class="meta">${money(p.price)} · ${p.active?'Ativo':'Inativo'}</div></div><button class="secondary" data-toggle="${p.id}" data-active="${p.active}">${p.active?'Ocultar':'Ativar'}</button><button class="secondary" data-delete="${p.id}">Excluir</button></div>`).join('')||'<p class="meta">Nenhum produto cadastrado.</p>';
+ $('adminProducts').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{let {error}=await db.from('products').update({active:b.dataset.active!=='true'}).eq('id',b.dataset.toggle);if(error)alert(error.message);else{await loadProducts();await loadAdminProducts();}});
+ $('adminProducts').querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir este produto?'))return;let {error}=await db.from('products').delete().eq('id',b.dataset.delete);if(error)alert(error.message);else{await loadProducts();await loadAdminProducts();}});
+}
+$('search').oninput=render;$('category').onchange=render;
+$('loginBtn').onclick=async()=>{const {data:{user}}=await db.auth.getUser();if(user){await db.auth.signOut();await checkUser();}else $('loginDialog').showModal();};
+$('closeLogin').onclick=()=>$('loginDialog').close();
+$('signIn').onclick=async()=>{ $('loginMessage').textContent='Entrando...';const {error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});$('loginMessage').textContent=error?error.message:'Login realizado.';if(!error){$('loginDialog').close();await checkUser();}};
+$('adminBtn').onclick=async()=>{if(!isAdmin)return;$('adminDialog').showModal();await loadAdminProducts();};
+$('closeAdmin').onclick=()=>$('adminDialog').close();
+
+$('saveProduct').onclick=async()=>{
+ if(!isAdmin){$('adminMessage').textContent='Acesso administrativo necessário.';return;}
+ const name=$('pname').value.trim(),price=Number($('pprice').value),colors=splitList($('pcolors').value||'Única'),sizes=splitList($('psizes').value||'Único'),stock=Number($('pstock').value);
+ const file=$('pimage').files[0];
+ if(!name||!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0){$('adminMessage').textContent='Confira nome, preço e estoque.';return;}
+ if(file&&file.size>8*1024*1024){$('adminMessage').textContent='A foto deve ter no máximo 8 MB.';return;}
+ $('saveProduct').disabled=true;$('adminMessage').textContent='Salvando produto...';
+ let image_url=null,uploadedPath=null;
+ try{
+  if(file){
+   const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+   uploadedPath=`${crypto.randomUUID()}.${ext}`;
+   const {error:upError}=await db.storage.from('produtos').upload(uploadedPath,file,{contentType:file.type||'image/jpeg',upsert:false});
+   if(upError)throw upError;
+   image_url=db.storage.from('produtos').getPublicUrl(uploadedPath).data.publicUrl;
+  }
+  const {data:product,error:prodError}=await db.from('products').insert({name,description:$('pdesc').value.trim(),price,gender:$('pgender').value,image_url,active:true}).select('id').single();
+  if(prodError)throw prodError;
+  const variants=[];
+  for(const color of colors)for(const size of sizes)variants.push({product_id:product.id,color,size,stock});
+  const {error:variantError}=await db.from('product_variants').insert(variants);
+  if(variantError){await db.from('products').delete().eq('id',product.id);throw variantError;}
+  $('adminMessage').textContent='Produto e variações cadastrados com sucesso!';
+  ['pname','pdesc','pprice','pcolors','psizes'].forEach(id=>$(id).value='');$('pstock').value='0';$('pimage').value='';
+  await loadProducts();await loadAdminProducts();
+ }catch(e){$('adminMessage').textContent='Erro: '+(e.message||'não foi possível cadastrar.');}
+ finally{$('saveProduct').disabled=false;}
+};
+db.auth.onAuthStateChange(()=>setTimeout(checkUser,0));
+checkUser();loadProducts();
+</script>
+</body></html>
